@@ -32,7 +32,7 @@ provider:
 
 functions:
   sendPhotoToTelegram:
-    handler: .src/index.handler
+    handler: src/index.handler
     memorySize: 128
     timeout: 20
     events:
@@ -56,3 +56,4 @@ package:
     - "*.yml"
     - "*.json"
     - "*.xml"
+    - "LICENSE"
