@@ -37,8 +37,38 @@ async function sendPhoto(chatId, photoUrl) {
         chat_id: chatId,
         photo: photoUrl
     });
-    console.log(res);
+    console.log(JSON.stringify(res));
     return res;
+}
+
+async function getChatAdministrators(chatId) {
+    const res = await apiCall('getChatAdministrators', {
+        chat_id: chatId,
+    });
+    return res.result;
+}
+
+async function getChatMembersCount(chatId) {
+    const res = await apiCall('getChatMembersCount', {
+        chat_id: chatId,
+    });
+    return res.result;
+}
+
+async function isCorrectAudience(chatId) {
+    const admins = await getChatAdministrators(chatId);
+    const audienceCount = await getChatMembersCount(chatId);
+    if (
+        audienceCount == process.env.TELEGRAM_EXPECTED_CHAT_MEMBER_COUNT &&
+        admins.length == 1 &&
+        admins[0].user.username == process.env.TELEGRAM_EXPECTED_CHAT_ADMIN_USERNAME &&
+        admins[0].user.id == process.env.TELEGRAM_EXPECTED_CHAT_ADMIN_ID &&
+        admins[0].status == "creator"
+    ) {
+        return true;
+    }
+    console.warn("Unexpected audience (" + audienceCount + ")! " + JSON.stringify(admins));
+    return false;
 }
 
 async function getPhotoUrl() {
@@ -63,12 +93,18 @@ async function getPhotoUrl() {
 
 exports.handler = async (event) => {
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    const photoUrl = await getPhotoUrl();
-    await sendPhoto(chatId, photoUrl);
-
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify('Lambda OK'),
-    };
-    return response;
+    if (await isCorrectAudience(chatId)) {
+        const photoUrl = await getPhotoUrl();
+        await sendPhoto(chatId, photoUrl);
+        return {
+            statusCode: 200,
+            body: "Photo sent",
+        };
+    }
+    else {
+        return {
+            statusCode: 500,
+            body: "Unintended audience in chat!",
+        };
+    }
 };

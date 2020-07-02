@@ -29,6 +29,9 @@ provider:
     BUCKET_NAME: !Ref PhotoBucket
     TELEGRAM_BOT_AUTH_TOKEN: ${self:custom.secret.telegram_bot_auth_token}
     TELEGRAM_CHAT_ID: ${self:custom.secret.telegram_chat_id}
+    TELEGRAM_EXPECTED_CHAT_ADMIN_ID: ${self:custom.secret.telegram_expected_chat_admin_id}
+    TELEGRAM_EXPECTED_CHAT_ADMIN_USERNAME: ${self:custom.secret.telegram_expected_chat_admin_username}
+    TELEGRAM_EXPECTED_CHAT_MEMBER_COUNT: ${self:custom.secret.telegram_expected_chat_member_count}
 
 functions:
   sendPhotoToTelegram:
