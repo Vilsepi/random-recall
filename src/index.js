@@ -82,7 +82,7 @@ async function getPhotoUrl() {
         return obj.Key.endsWith(".jpg");
     });
 
-    const randomPhoto = validPhotos[Math.floor(Math.random() * validPhotos.length)].Key;
+    const randomPhoto = validPhotos[(Math.ceil(Math.random() * validPhotos.length)) - 1].Key;
     const photoSignedUrl = s3.getSignedUrl('getObject', {
         Bucket: process.env.BUCKET_NAME,
         Key: randomPhoto,
