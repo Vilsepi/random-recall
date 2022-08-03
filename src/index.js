@@ -81,6 +81,7 @@ async function getPhotoUrl() {
     const validPhotos = objects.Contents.filter(obj => {
         return obj.Key.endsWith(".jpg");
     });
+    console.log("Found " + validPhotos.length + " valid photos to choose from");
 
     const randomPhoto = validPhotos[(Math.ceil(Math.random() * validPhotos.length)) - 1].Key;
     const photoSignedUrl = s3.getSignedUrl('getObject', {
