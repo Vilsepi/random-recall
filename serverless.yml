@@ -39,7 +39,7 @@ functions:
     memorySize: 128
     timeout: 20
     events:
-      - schedule: cron(00 6 ? * MON-FRI *)
+      - schedule: cron(00 6 ? * MON,THU *)
 
 resources:
   Resources:
