@@ -1,6 +1,8 @@
-const https = require('https');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
+import * as https from 'https';
+import { S3Client, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+const s3 = new S3Client();
 
 function apiCall(methodName, requestBody) {
     const authToken = process.env.TELEGRAM_BOT_AUTH_TOKEN;
@@ -72,11 +74,11 @@ async function isCorrectAudience(chatId) {
 }
 
 async function getPhotoUrl() {
-    const objects = await s3.listObjectsV2({
+    const objects = await s3.send(new ListObjectsV2Command({
         Bucket: process.env.BUCKET_NAME,
         Prefix: "photos-bot-can-send/",
         MaxKeys: 1000
-    }).promise();
+    }));
 
     const validPhotos = objects.Contents.filter(obj => {
         return obj.Key.endsWith(".jpg");
@@ -84,15 +86,12 @@ async function getPhotoUrl() {
     console.log("Found " + validPhotos.length + " valid photos to choose from");
 
     const randomPhoto = validPhotos[Math.floor(Math.random() * validPhotos.length)].Key;
-    const photoSignedUrl = s3.getSignedUrl('getObject', {
-        Bucket: process.env.BUCKET_NAME,
-        Key: randomPhoto,
-        Expires: 20
-    });
+    const command = new GetObjectCommand({Bucket: process.env.BUCKET_NAME, Key: randomPhoto});
+    const photoSignedUrl = getSignedUrl(s3, command, {expiresIn: 20});
     return photoSignedUrl;
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
     const chatId = process.env.TELEGRAM_CHAT_ID;
     if (await isCorrectAudience(chatId)) {
         const photoUrl = await getPhotoUrl();

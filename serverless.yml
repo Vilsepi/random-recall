@@ -57,4 +57,4 @@ resources:
 package:
   patterns:
     - "!*"
-    - "src/*.js"
+    - "src/*.mjs"
