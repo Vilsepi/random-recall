@@ -69,26 +69,35 @@ async function isCorrectAudience(chatId) {
     ) {
         return true;
     }
-    console.warn("Unexpected audience (" + audienceCount + ")! " + JSON.stringify(admins));
+    console.error("Unexpected audience (" + audienceCount + ")! " + JSON.stringify(admins));
     return false;
 }
 
-async function getPhotoUrl() {
+async function listBucketObjects(bucket, prefix, maxKeys = 1000) {
     const objects = await s3.send(new ListObjectsV2Command({
-        Bucket: process.env.BUCKET_NAME,
-        Prefix: "photos-bot-can-send/",
-        MaxKeys: 1000
+        Bucket: bucket,
+        Prefix: prefix,
+        MaxKeys: maxKeys
     }));
+    return objects.Contents || [];
+}
 
-    const validPhotos = objects.Contents.filter(obj => {
+async function getSignedObjectUrl(bucket, key, expiresIn = 20) {
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    return getSignedUrl(s3, command, { expiresIn });
+}
+
+async function getPhotoUrl() {
+    const bucket = process.env.BUCKET_NAME;
+    const objects = await listBucketObjects(bucket, "photos-bot-can-send/");
+
+    const validPhotos = objects.filter(obj => {
         return obj.Key.endsWith(".jpg");
     });
     console.log("Found " + validPhotos.length + " valid photos to choose from");
 
     const randomPhoto = validPhotos[Math.floor(Math.random() * validPhotos.length)].Key;
-    const command = new GetObjectCommand({Bucket: process.env.BUCKET_NAME, Key: randomPhoto});
-    const photoSignedUrl = getSignedUrl(s3, command, {expiresIn: 20});
-    return photoSignedUrl;
+    return getSignedObjectUrl(bucket, randomPhoto);
 }
 
 export const handler = async (event) => {
